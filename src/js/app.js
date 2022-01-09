@@ -13,8 +13,9 @@ export default () => {
   const onSearch = e => {
     e.preventDefault();
     imageApiPictures.query = e.currentTarget.elements.searchQuery.value;
-    if (imageApiPictures.query === '') {
-      return errorWatch();
+ 
+    if (imageApiPictures.query === '' || imageApiPictures.searchQuery.trim() === '') {
+      return emptyWatch();
     }
     imageApiPictures.getImage().then(({ hits, totalHits }) => {
       cardsReset();
@@ -23,16 +24,30 @@ export default () => {
       }
       appendNewCards(hits);
       firstTotalHits(totalHits);
-      refs.loadMoreBtn.style.display = 'block';
+      if (imageApiPictures.perPage > totalHits) {
+        refs.loadMoreBtn.style.display = 'none';
+      } else {
+        refs.loadMoreBtn.style.display = 'block';
+      }
       refs.searchInput.value = '';
     });
+    const totalPages = Math.ceil(totalHits / photoAPIService.perPage);
+    if (photoAPIService.page > totalPages) {
+      
+      refs.loadMoreBtn.style.display = 'none';
+    }
     imageApiPictures.resetPage();
   };
 
   const onLoadMore = () => {
-    imageApiPictures.getImage().then(({ hits }) => {
+    imageApiPictures.getImage().then(({ hits, totalHits }) => {
       appendNewCards(hits);
+
+      if (imageApiPictures.perPage * (imageApiPictures.page + 1) >= totalHits) {
+        return (refs.loadMoreBtn.style.display = 'none');
+      }
     });
+
   };
 
   const appendNewCards = cards => {
@@ -45,12 +60,18 @@ export default () => {
     refs.searchInput.value = '';
   };
 
+  const emptyWatch = () => {
+    Notify.warning('You have not entered anything');
+    refs.loadMoreBtn.style.display = 'none';
+    refs.searchInput.value = '';
+  }
+
   const renderPhoto = image => {
     return image
       .map(
-        ({ largeImageURL, webformatURL, tags, likes, views,  comments, downloads }) => 
+        ({  webformatURL, tags, likes, views,  comments, downloads }) => 
         `<div class="cardItem">
-          <a   href="${largeImageURL}">
+          <div>
             <img
                 class="gallery__img"
                 src="${webformatURL}"
@@ -63,10 +84,12 @@ export default () => {
                 <p class="info__item">Comments <span>${comments}</span></p>
                 <p class="info__item">Downloads  <span>${downloads}</span></p>
             </div>
-        </a>
+        </div>
         </div>`,
       )
       .join('');
+
+    
   };
 
   const cardsReset = () => {

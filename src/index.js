@@ -1,4 +1,4 @@
 import './sass/main.scss';
-import app from './app';
+import app from './js/app';
 
 app();
