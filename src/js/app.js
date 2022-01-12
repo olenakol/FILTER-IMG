@@ -1,22 +1,16 @@
 import myRefs from './refs';
 import ImageApiService from './service';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
 export default () => {
   const refs = myRefs;
   const imageApiPictures = new ImageApiService();
-  const galleryLightbox = new SimpleLightbox('.cardItem a');
-
 
   const onSearch = e => {
     e.preventDefault();
-    imageApiPictures.query = e.currentTarget.elements.searchQuery.value;
- 
-    if (imageApiPictures.query === '' || imageApiPictures.searchQuery.trim() === '') {
-      return emptyWatch();
-    }
+    imageApiPictures.query = e.currentTarget.elements.searchQuery.value.trim();
+    if (!imageApiPictures.query) return emptyWatch();
     imageApiPictures.getImage().then(({ hits, totalHits }) => {
       cardsReset();
       if (totalHits === 0) {
@@ -31,11 +25,6 @@ export default () => {
       }
       refs.searchInput.value = '';
     });
-    const totalPages = Math.ceil(totalHits / photoAPIService.perPage);
-    if (photoAPIService.page > totalPages) {
-      
-      refs.loadMoreBtn.style.display = 'none';
-    }
     imageApiPictures.resetPage();
   };
 
@@ -47,7 +36,6 @@ export default () => {
         return (refs.loadMoreBtn.style.display = 'none');
       }
     });
-
   };
 
   const appendNewCards = cards => {
@@ -64,13 +52,13 @@ export default () => {
     Notify.warning('You have not entered anything');
     refs.loadMoreBtn.style.display = 'none';
     refs.searchInput.value = '';
-  }
+  };
 
   const renderPhoto = image => {
     return image
       .map(
-        ({  webformatURL, tags, likes, views,  comments, downloads }) => 
-        `<div class="cardItem">
+        ({ webformatURL, tags, likes, views, comments, downloads }) =>
+          `<div class="cardItem">
           <div>
             <img
                 class="gallery__img"
@@ -88,8 +76,6 @@ export default () => {
         </div>`,
       )
       .join('');
-
-    
   };
 
   const cardsReset = () => {
@@ -102,5 +88,4 @@ export default () => {
 
   refs.searchForm.addEventListener('submit', onSearch);
   refs.loadMoreBtn.addEventListener('click', onLoadMore);
-  galleryLightbox.refresh();
 };
